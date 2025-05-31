@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter-Telegram Bot Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="bot" class="w-8 h-8 text-blue-600"></i>
+                        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Twitter-Telegram Bot</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div id="bot-status" class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-500">Statut:</span>
+                            <span id="status-indicator" class="flex items-center space-x-1">
+                                <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                                <span class="text-sm font-medium">Chargement...</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Tweets publiés</p>
+                            <p id="total-tweets" class="text-2xl font-semibold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <i data-lucide="message-square" class="w-8 h-8 text-blue-500 opacity-50"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Comptes actifs</p>
+                            <p id="active-accounts" class="text-2xl font-semibold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <i data-lucide="users" class="w-8 h-8 text-green-500 opacity-50"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Quota API</p>
+                            <p id="api-usage" class="text-2xl font-semibold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <i data-lucide="activity" class="w-8 h-8 text-orange-500 opacity-50"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Intervalle</p>
+                            <p id="poll-interval" class="text-2xl font-semibold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <i data-lucide="clock" class="w-8 h-8 text-purple-500 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accounts Management -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Comptes Twitter surveillés</h2>
+                        <button onclick="showAddAccountModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Ajouter un compte
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="accounts-list" class="space-y-4">
+                        <!-- Accounts will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tweets -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Tweets récents</h2>
+                </div>
+                <div class="p-6">
+                    <div id="recent-tweets" class="space-y-4">
+                        <!-- Recent tweets will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div id="add-account-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Ajouter un compte Twitter</h3>
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username Twitter</label>
+                        <input type="text" id="new-username" placeholder="@username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Canal Telegram</label>
+                        <input type="text" id="new-channel" placeholder="@channel" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                </div>
+                <div class="mt-5 flex justify-end space-x-3">
+                    <button onclick="hideAddAccountModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        Annuler
+                    </button>
+                    <button onclick="addAccount()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Ajouter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter-Telegram Bot Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Magic UI - Animations légères */
+        
+        /* Fond avec pattern subtil */
+        .dot-pattern {
+            background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        
+        /* Cartes avec effet de brillance */
+        .magic-card {
+            position: relative;
+            background: white;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .magic-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transform: rotate(45deg) translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .magic-card:hover::before {
+            transform: rotate(45deg) translateX(100%);
+        }
+        
+        .magic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Boutons avec effet shimmer */
+        .shimmer-button {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .shimmer-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .shimmer-button:hover::before {
+            left: 100%;
+        }
+        
+        .shimmer-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Animation de pulse douce */
+        .soft-pulse {
+            animation: softPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes softPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        /* Badges avec gradient animé */
+        .gradient-badge {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Bordure animée subtile */
+        .animated-border {
+            position: relative;
+            background: white;
+            z-index: 1;
+        }
+        
+        .animated-border::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+            background-size: 200% 100%;
+            z-index: -1;
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s;
+            animation: borderAnimation 3s linear infinite;
+        }
+        
+        .animated-border:hover::before {
+            opacity: 1;
+        }
+        
+        @keyframes borderAnimation {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        /* Effet de fade-in */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Animation des nombres */
+        .number-ticker {
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .number-ticker.updating {
+            transform: scale(1.1);
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dot-pattern">
+    <div class="min-h-screen">
+        <!-- Header avec gradient -->
+        <header class="bg-white shadow-sm border-b backdrop-blur-sm bg-opacity-95">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            Twitter-Telegram Bot
+                        </h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-500">Statut:</span>
+                        <span id="status-indicator" class="flex items-center space-x-2 px-3 py-1 rounded-full bg-gray-100">
+                            <span class="w-2 h-2 bg-gray-400 rounded-full soft-pulse"></span>
+                            <span class="text-sm font-medium">Chargement...</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Stats Cards avec animations -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="magic-card rounded-xl shadow-lg p-6 fade-in" style="animation-delay: 0.1s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Tweets publiés</p>
+                            <p id="total-tweets" class="text-3xl font-bold text-gray-900 number-ticker mt-1">-</p>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="magic-card rounded-xl shadow-lg p-6 fade-in" style="animation-delay: 0.2s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Comptes actifs</p>
+                            <p id="active-accounts" class="text-3xl font-bold text-gray-900 number-ticker mt-1">-</p>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="magic-card rounded-xl shadow-lg p-6 fade-in" style="animation-delay: 0.3s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Quota API</p>
+                            <p id="api-usage" class="text-3xl font-bold text-gray-900 number-ticker mt-1">-</p>
+                        </div>
+                        <div class="p-3 bg-orange-100 rounded-lg">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="magic-card rounded-xl shadow-lg p-6 fade-in" style="animation-delay: 0.4s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Intervalle</p>
+                            <p id="poll-interval" class="text-3xl font-bold text-gray-900 number-ticker mt-1">-</p>
+                        </div>
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accounts Management avec bordure animée -->
+            <div class="animated-border rounded-xl shadow-lg mb-8 fade-in" style="animation-delay: 0.5s">
+                <div class="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-900">Comptes Twitter surveillés</h2>
+                        <button onclick="showAddAccountModal()" class="shimmer-button px-4 py-2 text-sm font-medium rounded-lg text-white">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Ajouter un compte
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="accounts-list" class="space-y-3">
+                        <div class="flex items-center justify-center py-8">
+                            <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tweets -->
+            <div class="animated-border rounded-xl shadow-lg fade-in" style="animation-delay: 0.6s">
+                <div class="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                    <h2 class="text-lg font-bold text-gray-900">Tweets récents</h2>
+                </div>
+                <div class="p-6">
+                    <div id="recent-tweets" class="space-y-3">
+                        <div class="flex items-center justify-center py-8">
+                            <div class="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal amélioré -->
+    <div id="add-account-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 fade-in">
+        <div class="relative top-20 mx-auto p-5 w-96">
+            <div class="bg-white rounded-xl shadow-2xl p-6 animated-border">
+                <div class="mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Ajouter un compte Twitter</h3>
+                    <p class="text-sm text-gray-500 mt-1">Surveillez un nouveau compte Twitter</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username Twitter</label>
+                        <input type="text" id="new-username" placeholder="@username" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Canal Telegram</label>
+                        <input type="text" id="new-channel" placeholder="@channel" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button onclick="hideAddAccountModal()" 
+                            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all">
+                        Annuler
+                    </button>
+                    <button onclick="addAccount()" 
+                            class="shimmer-button px-4 py-2 text-white rounded-lg">
+                        Ajouter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        // Animation des nombres lors de la mise à jour
+        const originalUpdateNumber = window.updateNumber || function() {};
+        window.updateNumber = function(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.add('updating');
+                element.textContent = value;
+                setTimeout(() => {
+                    element.classList.remove('updating');
+                }, 300);
+            }
+        };
+    </script>
+</body>
+</html>

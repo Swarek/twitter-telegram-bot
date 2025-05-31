@@ -1,0 +1,91 @@
+{
+  "result": {
+    "data": {
+      "user": {
+        "result": {
+          "__typename": "User",
+          "id": "VXNlcjoyNzk0Mjg4MDEy",
+          "rest_id": "2794288012",
+          "affiliates_highlighted_label": {},
+          "has_graduated_access": true,
+          "is_blue_verified": false,
+          "profile_image_shape": "Circle",
+          "legacy": {
+            "can_dm": true,
+            "can_media_tag": false,
+            "created_at": "Tue Sep 30 10:53:24 +0000 2014",
+            "default_profile": true,
+            "default_profile_image": false,
+            "description": "French | @TheSandboxGame Ambassador | @RumbleKongs Team Manager Owner of Kong #0001 and @MetaKongs founder | Honorary @MetaLegendsNFT | Clone X #18885",
+            "entities": {
+              "description": {
+                "urls": []
+              },
+              "url": {
+                "urls": [
+                  {
+                    "display_url": "opensea.io/SwarekNFT",
+                    "expanded_url": "https://opensea.io/SwarekNFT",
+                    "url": "https://t.co/rDsMEW0P81",
+                    "indices": [
+                      0,
+                      23
+                    ]
+                  }
+                ]
+              }
+            },
+            "fast_followers_count": 0,
+            "favourites_count": 8659,
+            "followers_count": 2983,
+            "friends_count": 2907,
+            "has_custom_timelines": true,
+            "is_translator": false,
+            "listed_count": 20,
+            "location": "Marseille, France",
+            "media_count": 281,
+            "name": "swarek.eth\ud83c\udfde\ufe0f\ud83e\udd8d",
+            "normal_followers_count": 2983,
+            "pinned_tweet_ids_str": [
+              "1421234561443373062"
+            ],
+            "possibly_sensitive": false,
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/2794288012/1642620077",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/1523845142632931330/F3MCWy8C_normal.jpg",
+            "profile_interstitial_type": "",
+            "screen_name": "example_user",
+            "statuses_count": 6723,
+            "translator_type": "none",
+            "url": "https://t.co/rDsMEW0P81",
+            "verified": false,
+            "want_retweets": false,
+            "withheld_in_countries": []
+          },
+          "professional": {
+            "rest_id": "1484309632994594818",
+            "professional_type": "Creator",
+            "category": []
+          },
+          "tipjar_settings": {
+            "is_enabled": false
+          },
+          "smart_blocked_by": false,
+          "smart_blocking": false,
+          "legacy_extended_profile": {},
+          "is_profile_translatable": false,
+          "has_hidden_subscriptions_on_profile": false,
+          "verification_info": {
+            "is_identity_verified": false
+          },
+          "highlights_info": {
+            "can_highlight_tweets": false,
+            "highlighted_tweets": "0"
+          },
+          "user_seed_tweet_count": 0,
+          "business_account": {},
+          "creator_subscriptions_count": 0
+        }
+      }
+    }
+  }
+}

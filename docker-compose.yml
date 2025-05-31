@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+      - TWITTER_USERNAME_1=${TWITTER_USERNAME_1}
+      - TWITTER_PASSWORD_1=${TWITTER_PASSWORD_1}
+      - TWITTER_EMAIL_1=${TWITTER_EMAIL_1}
+      - SCRAPFLY_API_KEY=${SCRAPFLY_API_KEY}
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/twitter_telegram
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - bot-network
+
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      - POSTGRES_DB=twitter_telegram
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-localpassword}
+      - POSTGRES_SHARED_BUFFERS=128MB
+      - POSTGRES_EFFECTIVE_CACHE_SIZE=256MB
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bot-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - bot-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  bot-network:
+    driver: bridge
