@@ -22,6 +22,7 @@ class CheapAPIScraper:
         # APIs disponibles (à configurer dans .env)
         self.rapidapi_key = os.getenv('RAPIDAPI_KEY', '')
         self.twitterapi_io_key = os.getenv('TWITTERAPI_IO_KEY', '')
+        self.xquik_api_key = os.getenv('XQUIK_API_KEY', '')
     
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
@@ -96,6 +97,34 @@ class CheapAPIScraper:
                     return []
         except Exception as e:
             logger.error(f"Erreur fetch TwitterAPI.io: {e}")
+            return []
+
+    async def fetch_via_xquik(self, username: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Xquik X search API."""
+        if not self.xquik_api_key:
+            logger.warning("XQUIK_API_KEY non configurée")
+            return []
+
+        url = "https://xquik.com/api/v1/x/tweets/search"
+        headers = {
+            "X-API-Key": self.xquik_api_key,
+            "Content-Type": "application/json"
+        }
+        params = {
+            "q": f"from:{username} -filter:retweets",
+            "queryType": "Latest",
+            "limit": str(limit)
+        }
+
+        try:
+            async with self.session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return self._parse_xquik_tweets(data)
+                logger.error(f"Erreur Xquik: {response.status}")
+                return []
+        except Exception as e:
+            logger.error(f"Erreur fetch Xquik: {e}")
             return []
     
     async def fetch_via_free_proxy(self, username: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -175,6 +204,34 @@ class CheapAPIScraper:
             logger.error(f"Erreur parsing TwitterAPI.io: {e}")
         
         return tweets
+
+    def _parse_xquik_tweets(self, data: Dict) -> List[Dict[str, Any]]:
+        """Parser les tweets de Xquik."""
+        tweets = []
+
+        try:
+            for tweet in data.get('tweets', []):
+                author = tweet.get('author') or {}
+                username = author.get('username') or tweet.get('inReplyToUsername') or 'unknown'
+                tweets.append({
+                    'id': tweet.get('id'),
+                    'text': tweet.get('text'),
+                    'created_at': self._parse_date(tweet.get('createdAt')),
+                    'author': username,
+                    'author_name': author.get('name') or username,
+                    'url': tweet.get('url') or f"https://x.com/{username}/status/{tweet.get('id')}",
+                    'media': self._extract_xquik_media(tweet.get('media') or []),
+                    'likes': tweet.get('likeCount', 0),
+                    'retweets': tweet.get('retweetCount', 0),
+                    'replies': tweet.get('replyCount', 0),
+                    'is_retweet': bool(tweet.get('retweeted_tweet')),
+                    'is_quote': bool(tweet.get('isQuoteStatus') or tweet.get('quoted_tweet')),
+                    'reply_to': tweet.get('inReplyToId')
+                })
+        except Exception as e:
+            logger.error(f"Erreur parsing Xquik: {e}")
+
+        return tweets
     
     def _parse_generic_tweets(self, data: Any) -> List[Dict[str, Any]]:
         """Parser générique pour différents formats"""
@@ -237,6 +294,20 @@ class CheapAPIScraper:
                 })
         
         return media_list
+
+    def _extract_xquik_media(self, media: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        """Extraire les médias du format Xquik."""
+        media_list = []
+
+        for item in media:
+            media_url = item.get('mediaUrl') or item.get('url') or ''
+            if media_url:
+                media_list.append({
+                    'type': item.get('type', 'photo'),
+                    'url': media_url
+                })
+
+        return media_list
     
     def _parse_date(self, date_str: str) -> datetime:
         """Parser une date Twitter"""
@@ -287,8 +358,16 @@ class CheapAPIScraper:
             if tweets:
                 logger.info(f"✅ Succès TwitterAPI.io: {len(tweets)} tweets")
                 return tweets
+
+        # 3. Xquik (API de recherche X optionnelle)
+        if self.xquik_api_key:
+            logger.info(f"Tentative via Xquik pour @{username}")
+            tweets = await self.fetch_via_xquik(username, limit)
+            if tweets:
+                logger.info(f"Succès Xquik: {len(tweets)} tweets")
+                return tweets
         
-        # 3. Services proxy gratuits
+        # 4. Services proxy gratuits
         logger.info(f"Tentative via proxies gratuits pour @{username}")
         tweets = await self.fetch_via_free_proxy(username, limit)
         if tweets:
