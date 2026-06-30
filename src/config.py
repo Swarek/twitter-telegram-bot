@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     # APIs tierces économiques
     rapidapi_key: Optional[str] = Field(None, env="RAPIDAPI_KEY")
     twitterapi_io_key: Optional[str] = Field(None, env="TWITTERAPI_IO_KEY")
+    xquik_api_key: Optional[str] = Field(None, env="XQUIK_API_KEY")
     use_cheap_apis: bool = Field(True, env="USE_CHEAP_APIS")
     
     class Config:
