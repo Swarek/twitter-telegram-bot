@@ -99,19 +99,28 @@ class CheapAPIScraper:
             logger.error(f"Erreur fetch TwitterAPI.io: {e}")
             return []
 
-    async def fetch_via_xquik(self, username: str, limit: int = 10) -> List[Dict[str, Any]]:
+    async def fetch_via_xquik(
+        self,
+        username: str,
+        since_id: Optional[str] = None,
+        limit: int = 10,
+    ) -> List[Dict[str, Any]]:
         """Xquik X search API."""
         if not self.xquik_api_key:
             logger.warning("XQUIK_API_KEY non configurée")
             return []
 
         url = "https://xquik.com/api/v1/x/tweets/search"
+        query = f"from:{username} -filter:retweets"
+        if since_id:
+            query = f"{query} since_id:{since_id}"
+
         headers = {
             "X-API-Key": self.xquik_api_key,
             "Content-Type": "application/json"
         }
         params = {
-            "q": f"from:{username} -filter:retweets",
+            "q": query,
             "queryType": "Latest",
             "limit": str(limit)
         }
@@ -120,12 +129,30 @@ class CheapAPIScraper:
             async with self.session.get(url, headers=headers, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return self._parse_xquik_tweets(data)
+                    tweets = self._parse_xquik_tweets(data)
+                    return self._filter_since_id(tweets, since_id)
                 logger.error(f"Erreur Xquik: {response.status}")
                 return []
         except Exception as e:
             logger.error(f"Erreur fetch Xquik: {e}")
             return []
+
+    def _filter_since_id(
+        self,
+        tweets: List[Dict[str, Any]],
+        since_id: Optional[str],
+    ) -> List[Dict[str, Any]]:
+        """Garder seulement les tweets plus récents que since_id."""
+        if not since_id:
+            return tweets
+
+        filtered_tweets = []
+        for tweet in tweets:
+            if str(tweet.get('id')) == str(since_id):
+                break
+            filtered_tweets.append(tweet)
+
+        return filtered_tweets
     
     async def fetch_via_free_proxy(self, username: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
@@ -302,8 +329,11 @@ class CheapAPIScraper:
         for item in media:
             media_url = item.get('mediaUrl') or item.get('url') or ''
             if media_url:
+                media_type = item.get('type', 'photo')
+                if media_type == 'animated_gif':
+                    media_type = 'gif'
                 media_list.append({
-                    'type': item.get('type', 'photo'),
+                    'type': media_type,
                     'url': media_url
                 })
 
@@ -362,7 +392,7 @@ class CheapAPIScraper:
         # 3. Xquik (API de recherche X optionnelle)
         if self.xquik_api_key:
             logger.info(f"Tentative via Xquik pour @{username}")
-            tweets = await self.fetch_via_xquik(username, limit)
+            tweets = await self.fetch_via_xquik(username, since_id, limit)
             if tweets:
                 logger.info(f"Succès Xquik: {len(tweets)} tweets")
                 return tweets
